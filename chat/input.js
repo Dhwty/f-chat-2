@@ -566,8 +566,8 @@ FList.Chat.Input.Commands.timeout = {
         {
             type: 'character',
             ID: 'Character',
-            hint: 'A valid name of a currently online character.',
-            onlineOnly: true
+            hint: 'A valid character name.',
+            separate: true
         },
         {
             type: 'number',
@@ -597,14 +597,15 @@ FList.Chat.Input.Commands.gtimeout = {
         {
             type: 'character',
             ID: 'Character',
-            hint: 'A valid name of a currently online character.',
-            onlineOnly: true
+            hint: 'A valid character name.',
+            separate: true
         },
         {
             type: 'number',
             ID: 'Minutes',
             hint: 'The amount of time (in minutes) to temporarily reject access to the chat for the user.',
-            limit: [1 , Infinity]
+            limit: [1 , Infinity],
+		  separate: true 
         },
         {
             type: 'string',
