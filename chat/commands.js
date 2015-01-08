@@ -48,7 +48,7 @@ FList.Chat.commands['STA'] = function (params)
     var message="[user]" + params.character + "[/user] changed status to " + sta + (params.statusmsg!=="" ? ", " + params.statusmsg : "");
     if (!printtab) {//there is no tab open with this guy.
         if(FList.Chat.users.isTracked(params.character) && FList.Chat.Settings.current.friendNotifications && alert){//but we want notifications.
-		if(FList.Chat.Settings.current.consoleRTB === false){
+		if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
             FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});//print stuff in the active tab.
 		}
 		  FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -56,7 +56,7 @@ FList.Chat.commands['STA'] = function (params)
     }  else {//there is a tab open.
         if(active){//are we looking at it?
             if(alert){//FList.Chat.users.isTracked(params.character) && FList.Chat.Settings.current.friendNotifications &&
-			if(FList.Chat.Settings.current.consoleRTB === false){
+			if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});//print stuff in the active tab.
 			}
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -64,14 +64,14 @@ FList.Chat.commands['STA'] = function (params)
             FList.Chat.InfoBar.update();
         } else {
             if (FList.Chat.users.isTracked(params.character) && FList.Chat.Settings.current.friendNotifications && alert) {
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});//also print it in the active tab.
 			 }
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
             }
 
             if (!printtab.closed && alert === true) {
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message,to: FList.Chat.TabBar.getTabFromId(printtab.type, printtab.id),from: 'System', type: 'system'});//print stuff in the printtab
 			 }
 			FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -132,7 +132,7 @@ FList.Chat.commands['FLN'] = function (params)
     var message="[user]" + params.character + "[/user] is offline.";
     if(!printtab){//there is no tab open with this guy.
         if((FList.Chat.users.isTracked(params.character) && FList.Chat.Settings.current.friendNotifications)){//but we want notifications.
-            if(FList.Chat.Settings.current.consoleRTB === false){
+            if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 			  FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});//print stuff in the active tab.
 		  }
 		  FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -141,7 +141,7 @@ FList.Chat.commands['FLN'] = function (params)
         printtab.tab.children(".tpn").removeClass("tpn-paused").hide();
         if(active){//are we looking at it?
             //if(FList.Chat.users.isTracked(params.character) && FList.Chat.Settings.current.friendNotifications){
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});//print stuff in the active tab.
 			 }
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -149,12 +149,12 @@ FList.Chat.commands['FLN'] = function (params)
             FList.Chat.InfoBar.update();
         } else {
             if(FList.Chat.users.isTracked(params.character) && FList.Chat.Settings.current.friendNotifications){
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, type: 'System', from: 'system'});//also print it in the active tab.
 			 }
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
             }
-            if(FList.Chat.Settings.current.consoleRTB === false){
+            if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 			  if(!printtab.closed) FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId(printtab.type, printtab.id), from: 'System', type: 'system'});//print stuff in the printtab
 		  }
 		FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -172,7 +172,7 @@ FList.Chat.commands['CDS'] = function (params)
 };
 FList.Chat.commands['CIU'] = function(params) {
     var message = params.sender + " has invited you to join [session=" + params.title + "]" + params.name + "[/session].";
-    if(FList.Chat.Settings.current.consoleRTB === false){
+    if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 	    FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});
     }
     FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -587,7 +587,7 @@ FList.Chat.commands['NLN'] = function (params)
     var message="[user]" + params.identity + "[/user] is online.";
     if (!printtab) {//there is no tab open with this guy.
         if ((FList.Chat.users.isTracked(params.identity) && FList.Chat.Settings.current.friendNotifications)) {//but we want notifications.
-            if(FList.Chat.Settings.current.consoleRTB === false){
+            if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 			  FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});
 		  }
 		  FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -595,7 +595,7 @@ FList.Chat.commands['NLN'] = function (params)
     }  else {//there is a tab open.
         if (active) {//are we looking at it?
             //if(FList.Chat.users.isTracked(params.identity) && FList.Chat.Settings.current.friendNotifications){
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});
 			 }
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -603,14 +603,14 @@ FList.Chat.commands['NLN'] = function (params)
             FList.Chat.InfoBar.update();
         } else {
             if(FList.Chat.users.isTracked(params.identity) && FList.Chat.Settings.current.friendNotifications){
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});
 			 }
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
             }
 
             if (!printtab.closed) {
-                if(FList.Chat.Settings.current.consoleRTB === false){
+                if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 				 FList.Chat.printMessage({msg: message, to: printtab, from: 'System', type: 'system'});
 			 }
 			 FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -769,14 +769,14 @@ FList.Chat.commands['SFC'] = function(params) {
         var message = 'MODERATOR ALERT. [user]' + params.character + '[/user] writes:\n' + params.report + '\nThings you can do: ';
         message += '<a href="javascript:FList.Chat.staffAlert.confirm(\'' + params.callid + '\')">Confirm Alert</a>';
         if (typeof(params.logid) == "number") message += ', [url=' + domain + 'fchat/getLog.php?log=' + params.logid + ']View Attached Log[/url]';
-        if(FList.Chat.Settings.current.consoleRTB === false){
+        if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 		   FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});
 	   }
         if(FList.Chat.Settings.current.html5Audio) FList.Chat.Sound.playSound("modalert");
 	   FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
     } else if (params.action == "confirm") {
         message = 'ALERT CONFIRMED. [user]' + params.moderator + '[/user] is handling [user]' + params.character + '[/user]\'s report.';
-        if(FList.Chat.Settings.current.consoleRTB === false){
+        if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 		   FList.Chat.printMessage({msg: message, from: 'System', type: 'system'});
 	   }
 	   FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
@@ -863,7 +863,7 @@ FList.Chat.commands['RTB'] = function(params) {
         FList.Chat.friendsList.push(params.name);
 
     }
-    if(FList.Chat.Settings.current.consoleRTB === false){
+    if(FList.Chat.Settings.current.consoleRTB === false && FList.Chat.TabBar.activeTab.type !="console"){
 	FList.Chat.printMessage({msg: message, from: 'System', type: 'system'}); //to active tab
     }
     FList.Chat.printMessage({msg: message, to: FList.Chat.TabBar.getTabFromId('console', 'console'), from: 'System', type: 'system'}); //and the console
