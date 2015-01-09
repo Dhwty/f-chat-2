@@ -2,8 +2,8 @@
 
 FList.Chat.parseCommand = function (line)
 {
-    line = line.replace(/</g, "&lt;");
-    line = line.replace(/>/g, "&gt;");
+    line = line.replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     if (!jQuery.trim(line))
     {
         return;
@@ -15,7 +15,6 @@ FList.Chat.parseCommand = function (line)
                                 from: 'Server', type: 'system'});
     }
 
-    //FList.FChat_printMessage("&lt;&lt;" + line, "ChatTypeConsole", "", 0);
     var type = line.substr(0, 3);
     var params = line.length > 4 ? JSON.parse(line.substr(4)) : {};
     if (typeof (FList.Chat.commands[type]) == "function")
@@ -29,8 +28,8 @@ FList.Chat.parseCommand = function (line)
                                 from: 'Server', type: 'error'});
     }
 };
-FList.Chat.commands['STA'] = function (params)
-{ //STA username status
+
+FList.Chat.commands['STA'] = function (params) {
     var user = params.character;
     var sta = FList.Chat.users.sanitizeStatus(params.status);
     var data = FList.Chat.users.getData(user);
@@ -40,8 +39,8 @@ FList.Chat.commands['STA'] = function (params)
     data.status = sta;
     data.statusmsg = params.statusmsg;
     FList.Chat.users.setData(user, data);
-    if(params.character==FList.Chat.identity){
-        FList.Chat.Status.set(sta, params.statusmsg);
+    if (params.character === FList.Chat.identity) {
+        FList.Chat.Status.set(sta, FList.Chat.desanitize(params.statusmsg));
     }
     var printtab=FList.Chat.TabBar.getTabFromId("user", params.character);
     var active=params.character.toLowerCase()==FList.Chat.TabBar.activeTab.id && FList.Chat.TabBar.activeTab.type=="user";
@@ -80,10 +79,12 @@ FList.Chat.commands['STA'] = function (params)
         }
         FList.Chat.TabBar.updateTooltip(printtab);
     }
-    if(FList.Chat.TabBar.activeTab.type=="channel"){
-        FList.Chat.UserBar.updateUser(params.character);
+
+    if(FList.Chat.TabBar.activeTab.type === "channel"){
+        FList.Chat.UserBar.updateUser(data.name);
     }
 };
+
 FList.Chat.commands['LIS'] = function (params)
 {
     var users = params.characters;

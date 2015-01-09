@@ -1,21 +1,22 @@
 /**
- * Changelog 2.0 ---- As of 2/13/2014
- *
- * Fixed:
- * Bug with dates on persisting PM logs.
- * Various other fixes.
- *
- * New features/implementations:
- * Browser tab title notification of cumulative number of unread private messages/hits on keywords.
- * ^-> These only proc if the browser window tab is out of focus or the private message tab is out of focus.
- * Added a local syntax helpfile for every command.
- * Added a help command, which lists all the commands currently implemented in F-Chat 2.0.
- *
- * Refactorization/Optimization.
- * Completely redone parsing/handling of commands.
+ * Kali's Changelog: 08/01/15
+ * --------------------------
+ * >> Function Changed: printMessage @chat.js
+ * >     Fix for system messages not being highlighted and mentioned with the user's target highlight words.
+ * >     Fix for spacing of messages and colon on drawing the PM logs initially when requested.
+ * >> Function Changed: closeTab @chat.js
+ * >     Fix for refreshing channel tabs that have sent an JCH, but not actually received a join response.
+ * >> Function Changed: STA @commands.js
+ * >     Fix for usernames appearing lowercase in the active tab upon being updated with a new status.
+ * >     Fix for statuses being escaped indefinitely upon reiteration of auto idle.
+ * >> Function Added: removeKink @chat.js
+ * >     Added the ability to remove kinks from the player search.
+ * >> Function Added: fpriv @input.js
+ * >     Added the ability to force open a PM with a user who is offline.
  */
 
-WEB_SOCKET_SWF_LOCATION = "../WebSocket.swf";WEB_SOCKET_DEBUG = false;
+WEB_SOCKET_SWF_LOCATION = "../WebSocket.swf";
+WEB_SOCKET_DEBUG = false;
 
 $(function () {
     FList.ChatParser = new FList.BBParser();
@@ -64,6 +65,12 @@ FList.Chat = {
     bookmarksList: [],commands: {},version: "0.8.2",//"2.0.1",
 
     getCHA:false, getORS:false,
+
+    desanitize: function(str) {
+        return str.replace(/\&lt\;/g, '<')
+            .replace(/\&gt\;/g, '>')
+            .replace(/\&amp\;/g, '&');
+    },
 
     truncateVisible: function(){
         var amount=$(".chat-message").length;
@@ -451,7 +458,7 @@ FList.Chat.Search = {
     kinkFields: "",
 
     go: function(){
-        $("#search-panel-go").val("Searching...").attr("disabled",true);
+        $("#f-panel-go").val("Searching...").attr("disabled",true);
         var searchdata={};
             searchdata.kinks = [];
             $("#search-panel-kinks .list select").each(function(i,el){
@@ -502,8 +509,50 @@ FList.Chat.Search = {
         }
     },
 
+    removeKink: function() {
+        var kinks = $("#search-panel-kinks .list select");
+
+        if (FList.Chat.Search.kinkFields !== ""){
+            if (kinks.length === 1) {
+                $("#search-panel-kinks .list select")[0].remove();
+            } else {
+               kinks[kinks.length - 1].remove();
+            }
+        } else {
+            FList.Common_displayNotice(
+                "Search field values are still loading." +
+                "Hold on a moment and try again."
+            );
+        }
+    },
+
     getPanel: function(){
-        return '<div class="settings panel"><div id="search-panel-kinks" class="panel"><div class="search-tab-label"><span>Kinks</span></div><div class="list"></div></div><div id="search-panel-genders" class="panel"><div class="search-tab-label"><span>Genders</span></div><div class="list"></div></div><div id="search-panel-orientations" class="panel"><div class="search-tab-label"><span>Orientations</span></div><div class="list"></div></div><div id="search-panel-roles"><div class="search-tab-label"><span>Roles</span></div><div class="list"></div></div><div id="search-panel-positions" class="panel"><div class="search-tab-label"><span>Positions</span></div><div class="list"></div></div><div id="search-panel-languages" class="panel"><div class="search-tab-label"><span>Languages</span></div><div class="list"></div></div><div id="search-panel-buttons" class="panel"><input type="button" value="Search" id="search-panel-go" onclick="FList.Chat.Search.go();"/><br/><input type="button" id="search-panel-kinkadd" onclick="FList.Chat.Search.addKink();" value="+Kink"/></div></div><div class="results panel"></div>';
+        return '<div class="settings panel">' +
+            '<div id="search-panel-kinks" class="panel">' +
+            '<div class="search-tab-label"><span>Kinks</span></div>' +
+            '<div class="list"></div></div>' +
+            '<div id="search-panel-genders" class="panel">' +
+            '<div class="search-tab-label"><span>Genders</span></div>' +
+            '<div class="list"></div></div>' +
+            '<div id="search-panel-orientations" class="panel">' +
+            '<div class="search-tab-label"><span>Orientations</span></div>' +
+            '<div class="list"></div></div><div id="search-panel-roles">' +
+            '<div class="search-tab-label"><span>Roles</span></div>' +
+            '<div class="list"></div></div>' +
+            '<div id="search-panel-positions" class="panel">' +
+            '<div class="search-tab-label"><span>Positions</span></div>' +
+            '<div class="list"></div></div>' +
+            '<div id="search-panel-languages" class="panel">' +
+            '<div class="search-tab-label"><span>Languages</span></div>' +
+            '<div class="list"></div></div>' +
+            '<div id="search-panel-buttons" class="panel">' +
+            '<input type="button" value="Search" id="search-panel-go" ' +
+            'onclick="FList.Chat.Search.go();"/><br/>' +
+            '<input type="button" id="search-panel-kinkadd" ' +
+            'onclick="FList.Chat.Search.addKink();" value="+Kink"/>' +
+            '<input type="button" id="search-panel-kinkrem" ' +
+            'onclick="FList.Chat.Search.removeKink();" value="-Kink"/>' +
+            '</div></div><div class="results panel"></div>';
     }
 
 };
@@ -569,7 +618,6 @@ FList.Chat.UserBar = new function UserBar() {
     };
 
     this.updateUser = function(name){
-        name=name.toLowerCase();
         if($("#user-bar span[rel='" + name + "']").length>0){
             if($("#user-bar .section-ops span[rel='" + name + "']").length===0){//if not in the op list
                 FList.Chat.UserBar.removeUser(name);
@@ -1095,6 +1143,8 @@ FList.Chat.TabBar = new function TabBar() {
             var channeldata=FList.Chat.channels.getData(tabdata.id);
             if(channeldata.joined){
                 FList.Connection.send("LCH " + JSON.stringify({ "channel": tabdata.id }));
+
+                channeldata.joined = false;
             } else {
                 this.removeTab(tabdata.type, tabdata.id);
             }
@@ -1284,9 +1334,7 @@ FList.Chat.printMessage = function(args) {
 
     args.msg = this.processMessage(args.to.type, args.type, args.msg);
 
-    if (this.Settings.current.highlightMentions &&
-       (args.type === 'chat' || args.type === 'rp' || args.type === 'ad')) {
-
+    if (this.Settings.current.highlightMentions) {
             for (i = 0; i < this.Settings.current.highlightWords.length; ++i) {
                 regx = new RegExp("\\b" +
                                 this.Settings.current.highlightWords[i] +
@@ -1296,7 +1344,6 @@ FList.Chat.printMessage = function(args) {
                     args.to.type === "channel") {
                         highlight = true;
                 }
-
             }
 
             regx = new RegExp("\\b" + this.identity + "('s)?\\b", "i");
@@ -1305,15 +1352,16 @@ FList.Chat.printMessage = function(args) {
                 this.from !== this.identity && args.to.type === "channel") {
                     highlight = true;
             }
-
     }
 
     if (highlight) {
         classList += " chat-type-mention";
     }
 
-    avatarclasses = this.getPrintClasses(args.from,
-                                        ((args.to.type === "channel") ? args.to.id: false));
+    avatarclasses = this.getPrintClasses(
+        args.from,
+        ((args.to.type === "channel") ? args.to.id: false)
+    );
 
     if (args.type !== "chat" && args.type !== "ad" && args.type !== "rp") {
         avatarclasses = "";
@@ -1342,9 +1390,7 @@ FList.Chat.printMessage = function(args) {
                 (showmode === "chat" && args.type === "ad")) ? false: true;
 
     if (isDefault) {
-
             if (display) {
-
                 if (!tab.logs.length) {
                     $("#chat-content-chatarea > div").html("");
                 }
@@ -1356,10 +1402,9 @@ FList.Chat.printMessage = function(args) {
                 }
 
                 this.truncateVisible();
-
             }
-
     }
+
     if (!isDefault || (tabFocus !== args.to.id.toLowerCase()) || !wfocus) {
 
         if (args.to.type === "channel") {
@@ -1367,7 +1412,6 @@ FList.Chat.printMessage = function(args) {
                 tab.pending += 1;
                 if (highlight) {
                     tab.mentions += 1;
-
                     if (this.Settings.current.html5Audio) {
                         FList.Chat.Sound.playSound("attention");
                     }
@@ -1380,14 +1424,10 @@ FList.Chat.printMessage = function(args) {
                                                         FList.Chat.TabBar.setActive(args.to.type, args.to.id);
                                                    });
                     }
-
                 }
-
             }
-
         }
         if (args.to.type === "user" && args.from !== FList.Chat.identity) {
-
             if (args.type === "chat" || args.type === "rp") {
                 tab.mentions += 1;
 
@@ -1407,9 +1447,7 @@ FList.Chat.printMessage = function(args) {
             } else {
                 tab.pending += 1;
             }
-
         }
-
     }
 
     if (args.log && tab.logs.length && tab.logs[tab.logs.length-1].scheduledDeletion) {
@@ -1418,15 +1456,11 @@ FList.Chat.printMessage = function(args) {
 
     if (args.log) {
         tab.logs.push({"type": args.type ,"by": args.from, "html": html});
-
         if(!this.Settings.current.enableLogging){
-
             if(tab.logs.length > this.Settings.current.visibleLines) {
                 tab.logs.shift();
             }
-
         }
-
     } else if (!args.log && tab.logs.length === 0) {
         // This is here because if an unlogged printmessage is on the first line of the window,
         // it replaces all concurrent unlogged printmessages before it.
@@ -1620,8 +1654,11 @@ FList.Chat.IdleTimer = {
                 FList.Chat.IdleTimer.timer=0;
                 var tempstate={};
                 tempstate.status="Idle";
-                tempstate.statusmsg=FList.Chat.Status.lastStatus.statusMessage;
+                tempstate.statusmsg = FList.Chat.Status.lastStatus.statusMessage;
                 FList.Connection.send("STA " + JSON.stringify(tempstate));
+
+                console.log("STA " + JSON.stringify(tempstate) + " @FList.Chat.IdleTimer.enable");
+                
                 FList.Chat.IdleTimer.idle=true;
             }, FList.Chat.Settings.current.autoIdleTime);
         }
@@ -1844,6 +1881,7 @@ FList.Chat.Logs = (function (local) {
                     userClass = $('<span>'),
                     msgContainer,
                     htmlString = '';
+
                 container.addClass('chat-message');
                 timestamp.addClass('timestamp');
                 userClass.addClass(
@@ -1857,8 +1895,11 @@ FList.Chat.Logs = (function (local) {
                     paddedItoa(time.getMonth() + 1) + '/' +
                     paddedItoa(time.getDate()) + ']'
                 );
+
                 container.append(timestamp);
+
                 message = local.processMessage('user', type, message);
+
                 if (type === 'rp') {
                     container.addClass('chat-type-rp');
                     container.append($('<i>'));
@@ -1867,21 +1908,30 @@ FList.Chat.Logs = (function (local) {
                     container.addClass('chat-type-chat');
                     msgContainer = container;
                 }
+
                 msgContainer.append(userClass);
                 msgContainer.append(
-                    (type === 'rp' ? '': ':')
+                    (type === 'rp' ? '': ': ')
                     + message
                 );
+
                 htmlString = $('<div>').append(container).html();
+
                 return htmlString;
             }
+
             TARGET_TAB.initLogs = true;
-            if (!localStorage[LS_PTR]) return;
+            
+            if (!localStorage[LS_PTR])
+                return;
+
             lsData = JSON.parse(localStorage[LS_PTR]);
+
             bufferLimit = Math.min(
                 parseInt(local.Settings.current.visibleLines, 10),
                 lsData.logs.length
             );
+
             for (var i = 0; i < bufferLimit; i++) {
                 curMsg = lsData.logs[i];
                 TARGET_TAB.logs.unshift({
