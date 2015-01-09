@@ -1943,6 +1943,29 @@ FList.Chat.Input.Commands.help = {
         }
     ]
 };
+
+/**
+ * force-priv command.
+ *
+ * @params {Array} [args] Array of requested arguments
+ */
+FList.Chat.Input.Commands.fpriv = {
+    func: function(args) {
+        FList.Chat.openPrivateChat(args[0], false);
+
+        pass();
+    },
+    title: 'Force Private Message',
+    does: 'Opens a PM dialog with an offline or online user.',
+    params: [
+        {
+            type: 'character',
+            ID: 'Character',
+            hint: 'A valid name of a currently online character.'
+        }
+    ]
+};
+
 /**
 * Set the default idle auto-response.
 *
