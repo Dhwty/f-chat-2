@@ -1655,10 +1655,7 @@ FList.Chat.IdleTimer = {
                 var tempstate={};
                 tempstate.status="Idle";
                 tempstate.statusmsg = FList.Chat.Status.lastStatus.statusMessage;
-                FList.Connection.send("STA " + JSON.stringify(tempstate));
-
-                console.log("STA " + JSON.stringify(tempstate) + " @FList.Chat.IdleTimer.enable");
-                
+                FList.Connection.send("STA " + JSON.stringify(tempstate));                
                 FList.Chat.IdleTimer.idle=true;
             }, FList.Chat.Settings.current.autoIdleTime);
         }
