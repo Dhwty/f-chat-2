@@ -1955,13 +1955,66 @@ FList.Chat.Input.Commands.fpriv = {
 
         pass();
     },
-    title: 'Force Private Message',
-    does: 'Opens a PM dialog with an offline or online user.',
+    title: 'Fpriv',
+    does: 'Force open a PM dialog with an offline or online user.',
     params: [
         {
             type: 'character',
             ID: 'Character',
             hint: 'A valid name of a currently online character.'
+        }
+    ]
+};
+
+/**
+ * Ping channel activity toggle.
+ *
+ * @params {Array} [args] Array of requested arguments
+ */
+FList.Chat.Input.Commands.track = {
+    func: function(args) {
+        var tarTab;
+
+        if (!args[0] && curTab.type !== 'channel')
+            return fail('Cannot toggle pinging in a non-channel window.');
+
+        if (args[0]) {
+            tarTab = FList.Chat.TabBar.getTabFromId('channel', args[0]);
+
+            if (!tarTab)
+                return fail('This channel doesn\'t exist in your currently open channels.');
+
+            if (!tarTab.tracking) {
+                tarTab.tracking = true;
+
+                fprint('Now tracking: ' + tarTab.id + '.');
+            } else {
+                tarTab.tracking = false;
+
+                fprint('No longer tracking: ' + tarTab.id + '.');
+            }
+        } else {
+            if (!curTab.tracking) {
+                curTab.tracking = true;
+
+                fprint('Now tracking: ' + curTab.id + '.');
+            } else {
+                curTab.tracking = false;
+
+                fprint('No longer tracking: ' + curTab.id + '.');
+            }
+        }
+
+        pass();
+    },
+    title: 'Track',
+    does: 'Notifies of channel activity with an audio sound-clip.',
+    params: [
+        {
+            type: 'string',
+            ID: 'Channel',
+            hint: 'A valid public/private channel name/id. (Optional)',
+            optional: true
         }
     ]
 };
