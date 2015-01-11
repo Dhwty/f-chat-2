@@ -13,6 +13,8 @@
  * >     Added the ability to remove kinks from the player search.
  * >> Function Added: fpriv @input.js
  * >     Added the ability to force open a PM with a user who is offline.
+ * >> Function Added: track @input.js -- Changed: printMessage @chat.js
+ * >     Ability to track channels with a toggled command and receive sound-notifications of activity.
  */
 
 WEB_SOCKET_SWF_LOCATION = "../WebSocket.swf";
@@ -1305,7 +1307,8 @@ FList.Chat.printMessage = function(args) {
         html = "",
         tab,
         showmode,
-        display;
+        display,
+        isTracked;
 
     args.to = (isDefault) ? this.TabBar.activeTab: args.to;
 
@@ -1424,6 +1427,11 @@ FList.Chat.printMessage = function(args) {
                                                         FList.Chat.TabBar.setActive(args.to.type, args.to.id);
                                                    });
                     }
+                } else if (tab.tracking && args.type !== 'system') {
+                    tab.mentions += 1;
+                    if (this.Settings.current.html5Audio) {
+                        FList.Chat.Sound.playSound("attention");
+                    }
                 }
             }
         }
@@ -1469,7 +1477,7 @@ FList.Chat.printMessage = function(args) {
 
 
     if (args.from !== "System" &&
-       (args.to.type === "user" || highlight) &&
+       (args.to.type === "user" || highlight || isTracked) &&
        (!wfocus || tabFocus !== args.to.id.toLowerCase())) {
             FList.tNotice.newMsg(args.to.id.toLowerCase());
     }
@@ -1656,9 +1664,6 @@ FList.Chat.IdleTimer = {
                 tempstate.status="Idle";
                 tempstate.statusmsg = FList.Chat.Status.lastStatus.statusMessage;
                 FList.Connection.send("STA " + JSON.stringify(tempstate));
-
-                console.log("STA " + JSON.stringify(tempstate) + " @FList.Chat.IdleTimer.enable");
-                
                 FList.Chat.IdleTimer.idle=true;
             }, FList.Chat.Settings.current.autoIdleTime);
         }
