@@ -152,7 +152,9 @@ FList.Chat.Input.parse = function(input) {
         matcherString,
         regx;
 
-input = input.split(/ +/gi);
+    input = input.split(/ +/gi);
+
+    curTab = FList.Chat.TabBar.activeTab;
 
     invoke = input
              .shift()
