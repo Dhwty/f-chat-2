@@ -1297,7 +1297,10 @@ FList.Chat.printMessage = function(args) {
         isDefault = (!args.to || args.to === {} ||
                     args.to.id.toLowerCase() === this.TabBar.activeTab.id.toLowerCase()) ?
                         true: false,
-        classList = "chat-message chat-type-" + args.type,
+        classList = (
+            "chat-message chat-type-" +
+            (args.type === "roll" ? "system":args.type)
+        ),
         tabFocus = FList.Chat.TabBar.activeTab.id.toLowerCase(),
         ct = new Date(),
         time = (ct.getHours() < 10 ? "0" + ct.getHours(): ct.getHours()) + ":" +
@@ -1337,7 +1340,7 @@ FList.Chat.printMessage = function(args) {
 
     args.msg = this.processMessage(args.to.type, args.type, args.msg);
 
-    if (this.Settings.current.highlightMentions) {
+    if (this.Settings.current.highlightMentions && args.type !== "system") {
             for (i = 0; i < this.Settings.current.highlightWords.length; ++i) {
                 regx = new RegExp("\\b" +
                                 this.Settings.current.highlightWords[i] +
