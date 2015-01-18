@@ -41,6 +41,7 @@ Input = Chat.Input,
 Settings = Chat.Settings,
 Channels = Chat.Channels,
 Sound = Chat.Sound,
+curTab = TabBar.activeTab,
 
 /**
  * Socket Send alias.
