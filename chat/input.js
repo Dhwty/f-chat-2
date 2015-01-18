@@ -31,30 +31,42 @@ var pass = function() {
 },
 
 /**
+ * Namespace aliasing
+ */
+Chat = FList.Chat,
+Con = FList.Connection,
+TabBar = Chat.TabBar,
+Users = Chat.users,
+Input = Chat.Input,
+Settings = Chat.Settings,
+Channels = Chat.Channels,
+Sound = Chat.Sound,
+
+/**
  * Socket Send alias.
  *
  * @param {String} msg The message to send to the server.
  */
 wsSend = function(sendString) {
-    FList.Connection.send(sendString);
+    Con.send(sendString);
 },
-
-/**
- * Current Tab alias.
- *
- * @define {Object} curTab The current tab in focus.
- */
-curTab = FList.Chat.TabBar.activeTab,
 
 /**
  * PrintMessage alias.
  *
  * @param {String} message The string to print
-* @param {Boolean} type Message Type
+ * @param {Boolean} type Message Type
+ * @param {Boolean} [opt_log]
  */
-fprint = function(message, type) {
-type = (type) ? 'error' : 'system';
-FList.Chat.printMessage({msg: message, from: 'System', type: type, log: ((type === "system") ? true : false)});
+fprint = function(message, type, log) {
+    type = (!type) ? 'system': type;
+
+    Chat.printMessage({
+        msg: message,
+        from: 'System',
+        type: type,
+        log: log
+    });
 },
 
 /**
@@ -66,11 +78,10 @@ help = function(cmd) {
     var egParms = ' ',
         i;
 
-    cmd = FList.Chat.Input.Commands[cmd];
+    cmd = Input.Commands[cmd];
 
-fail('[b]Help reference for[/b]: ' + cmd.title);
-fail('[b]Command description[/b]: ' + cmd.does);
-
+    fail('[b]Help reference for[/b]: ' + cmd.title);
+    fail('[b]Command description[/b]: ' + cmd.does);
 
     if (cmd.params) {
         for (i = 0, ii = cmd.params.length; i < ii; ++i) {
@@ -106,12 +117,11 @@ fail('[b]Command description[/b]: ' + cmd.does);
  * @param {String} [opt_callHelp] Optional display helpfile call.
  */
 fail = function (err, opt_callHelp) {
-fprint(err, true);
+    fprint(err, 'error');
 
     if (opt_callHelp) {
         help(opt_callHelp);
     }
-
 };
 
 /**
@@ -119,7 +129,7 @@ fprint(err, true);
  *
  * @param {String} input The message to sanitize/HTML break
  */
-FList.Chat.Input.sanitize = function(input) {
+Input.sanitize = function(input) {
     return input.replace(/</gi, '&lt;').replace(/>/gi, '&gt;');
 };
 
@@ -138,11 +148,11 @@ FList.Chat.Input.sanitize = function(input) {
  * @param {String} input The raw user input.
  * @this {FList.Chat.Input}
  */
-FList.Chat.Input.parse = function(input) {
+Input.parse = function(input) {
     var invoke = '',
         parameters = [],
         toSend = [],
-        cmdObj = FList.Chat.Input.Commands,
+        cmdObj = Input.Commands,
         paramfmt,
         i,
         curfmt,
@@ -154,11 +164,12 @@ FList.Chat.Input.parse = function(input) {
 
     input = input.split(/ +/gi);
 
-    curTab = FList.Chat.TabBar.activeTab;
+    curTab = TabBar.activeTab;
 
     invoke = input
              .shift()
-             .replace('/','');
+             .replace('/','')
+             .toLowerCase();
 
     if (!cmdObj[invoke]) {
         return fail('Unrecognized command.');
@@ -201,7 +212,7 @@ FList.Chat.Input.parse = function(input) {
             if (curfmt.onlineOnly) {
                 matchCount = 1;
 
-                matcherString = FList.Chat.users.list.join('\n') + '\n';
+                matcherString = Users.list.join('\n') + '\n';
 
                 lineStore = parameters.shift();
 
@@ -314,78 +325,84 @@ FList.Chat.Input.parse = function(input) {
  *
  * @param {String} msg The user input
  */
-FList.Chat.Input.handle = function(msg) {
-    curTab = FList.Chat.TabBar.activeTab;
-    var channeldata = FList.Chat.channels.getData(curTab.id),
+Input.handle = function(msg) {
+    curTab = TabBar.activeTab;
+    var channeldata = Channels.getData(curTab.id),
     isRp = (msg.indexOf('/me') === 0),
         msgType = 'chat',
     isCmd = (msg.charAt(0) === '/'),
     isWarn = (msg.indexOf('/warn ') === 0);
 
-if (isRp) msgType = 'rp';
+    if (isRp)
+        msgType = 'rp';
 
     if (curTab.type === 'console') {
 
-    if (isCmd && !isRp && !isWarn) return this.parse(msg);
+        if (isCmd && !isRp && !isWarn)
+            return this.parse(msg);
 
-    return FList.Common_displayError('You cannot chat in the console.');
+        return FList.Common_displayError('You cannot chat in the console.');
     } else if (curTab.type === 'channel') {
 
-    if (isCmd && !isRp && !isWarn) return this.parse(msg);
+        if (isCmd && !isRp && !isWarn)
+            return this.parse(msg);
 
-    if (channeldata.mode === 'ads')
-                return FList.Chat.Roleplay.sendAd(curTab.id, msg);
+        if (channeldata.mode === 'ads')
+            return Chat.Roleplay.sendAd(curTab.id, msg);
 
-            if (msg.trim()){
+        if (msg.trim()) {
 
-        if (FList.Chat.Settings.current.html5Audio)
-                    FList.Chat.Sound.playSound('chat');
+            if (Settings.current.html5Audio)
+                Sound.playSound('chat');
 
-                wsSend('MSG ' +
-                       JSON.stringify({channel: curTab.id, 'message': msg}));
+            wsSend('MSG ' +
+                   JSON.stringify({channel: curTab.id, 'message': msg}));
 
-        if (isRp) msg = msg.substr(3);
+            if (isRp) msg = msg.substr(3);
 
-                msg = FList.Chat.Input.sanitize(msg);
+            msg = Input.sanitize(msg);
 
-        FList.Chat.printMessage({
-            "msg": msg,
-            to: FList.Chat.TabBar.getTabFromId('channel', curTab.id),
-            from: FList.Chat.identity,
-            type: msgType
-        });
+            Chat.printMessage({
+                "msg": msg,
+                to: TabBar.getTabFromId('channel', curTab.id),
+                from: Chat.identity,
+                type: msgType
+            });
 
-                pass();
-            }
+            pass();
+        }
 
     } else {// User
 
-    if (isCmd && !isRp && !isWarn) return this.parse(msg);
+        if (isCmd && !isRp && !isWarn) 
+            return this.parse(msg);
 
-        if (msg.trim()){
+        if (msg.trim()) {
 
-        if (FList.Chat.Settings.current.html5Audio)
-                FList.Chat.Sound.playSound('chat');
+            if (Settings.current.html5Audio)
+                Sound.playSound('chat');
 
             wsSend('PRI ' +
                    JSON.stringify({recipient: curTab.id, 'message': msg}));
 
-        if (isRp) msg = msg.substr(3);
-        msg = FList.Chat.Input.sanitize(msg);
-        FList.Chat.Logs.saveLogs(
-            FList.Chat.identity,
-            {
-                msg: msg,
-                kind: msgType,
-                to: curTab.id.toLowerCase()
-            }
-        );
+            if (isRp) 
+                msg = msg.substr(3);
+        
+            msg = Input.sanitize(msg);
+            Chat.Logs.saveLogs(
+                Chat.identity,
+                {
+                    msg: msg,
+                    kind: msgType,
+                    to: curTab.id.toLowerCase()
+                }
+            );
 
-        FList.Chat.printMessage({
-            msg: msg,
-            from: FList.Chat.identity,
-            type: msgType
-        });
+            Chat.printMessage({
+                msg: msg,
+                from: Chat.identity,
+                type: msgType
+            });
 
             pass();
 
@@ -403,7 +420,7 @@ if (isRp) msgType = 'rp';
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.reward = {
+Input.Commands.reward = {
     func: function(args) {
         wsSend('RWD ' +
                JSON.stringify({character:args[0]}));
@@ -426,9 +443,9 @@ FList.Chat.Input.Commands.reward = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.join = {
+Input.Commands.join = {
     func: function(args) {
-        FList.Chat.openChannelChat(args[0], false);
+        Chat.openChannelChat(args[0], false);
 
         pass();
     },
@@ -447,14 +464,13 @@ FList.Chat.Input.Commands.join = {
 /**
  * Close command.
  */
-FList.Chat.Input.Commands.close = {
+Input.Commands.close = {
     func: function() {
 
-        if (curTab.type === 'console') {
+        if (curTab.type === 'console')
             return fail('You can not close the console window.');
-        }
 
-        FList.Chat.TabBar.closeTab(curTab.tab);
+        TabBar.closeTab(curTab.tab);
 
         pass();
     },
@@ -467,7 +483,7 @@ FList.Chat.Input.Commands.close = {
  * UPT
  * Uptime command.
  */
-FList.Chat.Input.Commands.uptime = {
+Input.Commands.uptime = {
     func: function() {
         wsSend('UPT');
 
@@ -483,13 +499,12 @@ FList.Chat.Input.Commands.uptime = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.status = {
+Input.Commands.status = {
     func: function(args) {
         var sendString = 'STA ';
 
-        if (args[1] && args[1].length > 255) {
+        if (args[1] && args[1].length > 255)
             return fail('The status message cannot be more than 255 characters long.');
-        }
 
         if (args[1]) {
             sendString += JSON.stringify({status:args[0], statusmsg:args[1]});
@@ -525,9 +540,9 @@ FList.Chat.Input.Commands.status = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.priv = {
+Input.Commands.priv = {
     func: function(args) {
-        FList.Chat.openPrivateChat(args[0], false);
+        Chat.openPrivateChat(args[0], false);
 
         pass();
     },
@@ -549,16 +564,13 @@ FList.Chat.Input.Commands.priv = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.timeout = {
+Input.Commands.timeout = {
     func: function(args) {
-        var channel = curTab;
-
-        if(channel.type !== 'channel') {
+        if (curTab.type !== 'channel')
             return fail('You can only time people out in a channel.');
-        }
 
         wsSend('CTU ' +
-               JSON.stringify({channel: channel.id, character: args[0], length: args[1]}));
+               JSON.stringify({channel: curTab.id, character: args[0], length: args[1]}));
 
         pass();
     },
@@ -586,7 +598,7 @@ FList.Chat.Input.Commands.timeout = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.gtimeout = {
+Input.Commands.gtimeout = {
     func: function(args) {
         wsSend('TMO ' +
                JSON.stringify({time: args[1], character: args[0], reason: args[2]}));
@@ -622,7 +634,7 @@ FList.Chat.Input.Commands.gtimeout = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.roll = {
+Input.Commands.roll = {
     func: function(args) {
         var dice,
             tab,
@@ -633,36 +645,32 @@ FList.Chat.Input.Commands.roll = {
             d,
             message_body;
 
-        tab = FList.Chat.TabBar.activeTab;
+        tab = TabBar.activeTab;
 
-        if(tab.type === 'console') {
+        if (tab.type === 'console')
             return fail('You can not roll dice in the console.');
-        }
 
         dice = args[0].replace(/ /g, '');
 
-        if (!dice) {
+        if (!dice)
             dice = '1d10';
-        }
 
         rolls = dice.split(/[+\-]/);
 
         for (i = 0;i < rolls.length;++i) {
 
-            if (!((/^[0-9]d[0-9]+$/).test(rolls[i]) || (/^[0-9]+$/.test(rolls[i])))) {
+            if (!((/^[0-9]d[0-9]+$/).test(rolls[i]) || (/^[0-9]+$/.test(rolls[i]))))
                 return fail('Wrong dice format. Dice format is throw+throw+throw+...' +
                             ', where a throw is either [1-9]d[2-100] or just a number to be added.');
-            }
 
             dt = rolls[i].split('d');
             r = parseInt(dt[0], 10);
             d = parseInt(dt[1], 10);
-            if (dt.length > 1 && (r > 9 || d < 1 || d > 500)) {
+            if (dt.length > 1 && (r > 9 || d < 1 || d > 500))
                 return fail('Dice integers out of valid range.');
-            }
-            if (parseInt(rolls[i], 10) > 10000) {
+
+            if (parseInt(rolls[i], 10) > 10000)
                 return fail('Invalid modifier or modifier out of range.');
-            }
         }
 
         message_body = {dice: dice};
@@ -694,12 +702,11 @@ FList.Chat.Input.Commands.roll = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.kick = {
+Input.Commands.kick = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('CKU ' +
@@ -733,12 +740,11 @@ FList.Chat.Input.Commands.kick = {
  * COL
  * Channel Operator List command.
  */
-FList.Chat.Input.Commands.coplist = {
+Input.Commands.coplist = {
     func: function() {
 
-        if (curTab.type !== 'channel') {
+        if (curTab.type !== 'channel')
             return fail('You must be in a channel to use this command.');
-        }
 
         wsSend('COL ' +
                JSON.stringify({channel: curTab.id}));
@@ -752,18 +758,22 @@ FList.Chat.Input.Commands.coplist = {
 /**
  * Global Operator List command.
  */
-FList.Chat.Input.Commands.listops = {
+Input.Commands.listops = {
     func: function() {
         var str = '',
             i;
 
-        for (i = 0;i < FList.Chat.opList.length;++i) {
-            str = str + '[user]' + FList.Chat.opList[i] + '[/user], ';
+        for (i = 0;i < Chat.opList.length;++i) {
+            str = str + '[user]' + Chat.opList[i] + '[/user], ';
         }
 
         str = str.substring(0 , (str.length - 2));
 
-        FList.Chat.printMessage({msg: 'Ops: ' + str, from: 'System', type: 'system'});
+        Chat.printMessage({
+            msg: 'Ops: ' + str,
+            from: 'System',
+            type: 'system'
+        });
 
         pass();
     },
@@ -777,12 +787,11 @@ FList.Chat.Input.Commands.listops = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.ban = {
+Input.Commands.ban = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('CBU ' +
@@ -817,12 +826,11 @@ FList.Chat.Input.Commands.ban = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.unban = {
+FInput.Commands.unban = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('CUB ' +
@@ -857,12 +865,10 @@ FList.Chat.Input.Commands.unban = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.gunban = {
+Input.Commands.gunban = {
     func: function(args) {
-
-        if(!args[0] && curTab.type !== 'user') {
+        if(!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             wsSend('UNB ' +
@@ -890,15 +896,14 @@ FList.Chat.Input.Commands.gunban = {
  * RLL
  * Bottle command.
  */
-FList.Chat.Input.Commands.bottle = {
+Input.Commands.bottle = {
     func: function() {
         var message_body = {dice: 'bottle'};
 
         curTab.type === 'channel' ? message_body.channel = curTab.id : message_body.recipient = curTab.id;
 
-        if(curTab.type === 'console') {
+        if (curTab.type === 'console')
             return fail('You can not spin the bottle in the console.');
-        }
 
         wsSend('RLL ' + JSON.stringify(message_body));
 
@@ -914,12 +919,11 @@ FList.Chat.Input.Commands.bottle = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.setowner = {
+Input.Commands.setowner = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('CSO ' +
@@ -955,15 +959,13 @@ FList.Chat.Input.Commands.setowner = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.ignore = {
+Input.Commands.ignore = {
     func: function(args) {
-        if (FList.Rights.has("chat-chatop")) {
+        if (FList.Rights.has("chat-chatop"))
             return fail("As a chatop, you can't ignore chatters, and they cannot ignore you.");
-        }
         
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         var name = (args[0] || curTab.id).toLowerCase();
         
@@ -993,17 +995,16 @@ FList.Chat.Input.Commands.ignore = {
 /**
  * Ignore List command.
  */
-FList.Chat.Input.Commands.ignorelist = {
+Input.Commands.ignorelist = {
     func: function() {
         var user = '',
             i;
 
-        if (!FList.Chat.ignoreList.length) {
+        if (!FList.Chat.ignoreList.length)
             return fail('You are not ignoring anyone.');
-        }
 
-        for (i = 0;i < FList.Chat.ignoreList.length;++i) {
-            user += '[user]' + FList.Chat.ignoreList[i] + '[/user], ';
+        for (i = 0;i < Chat.ignoreList.length;++i) {
+            user += '[user]' + Chat.ignoreList[i] + '[/user], ';
         }
 
         fprint('You are ignoring: ' + user.substring(0,user.length-2));
@@ -1020,12 +1021,11 @@ FList.Chat.Input.Commands.ignorelist = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.unignore = {
+Input.Commands.unignore = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             wsSend('IGN ' +
@@ -1055,7 +1055,7 @@ FList.Chat.Input.Commands.unignore = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.makeroom = {
+Input.Commands.makeroom = {
     func: function(args) {
         wsSend('CCR ' +
                JSON.stringify({channel: args[0]}));
@@ -1079,12 +1079,11 @@ FList.Chat.Input.Commands.makeroom = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.gop = {
+Input.Commands.gop = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             wsSend('AOP ' +
@@ -1114,12 +1113,11 @@ FList.Chat.Input.Commands.gop = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.gdeop = {
+Input.Commands.gdeop = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             wsSend('DOP ' +
@@ -1149,14 +1147,13 @@ FList.Chat.Input.Commands.gdeop = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.reload = {
+Input.Commands.reload = {
     func: function(args) {
         var word = args[0],
                 o = {};
 
-        if (word === 'save') {
+        if (word === 'save')
             o.save = 'yes';
-        }
 
         wsSend('RLD ' + JSON.stringify(o));
 
@@ -1179,12 +1176,11 @@ FList.Chat.Input.Commands.reload = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.op = {
+Input.Commands.op = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('COA ' +
@@ -1219,13 +1215,12 @@ FList.Chat.Input.Commands.op = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.deop = {
+Input.Commands.deop = {
     func: function(args) {
         var sendString = 'COR ';
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             sendString += JSON.stringify({channel: args[1], character: args[0]});
@@ -1260,12 +1255,11 @@ FList.Chat.Input.Commands.deop = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.closeroom = {
+Input.Commands.closeroom = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'channel') {
+        if (!args[0] && curTab.type !== 'channel')
             return fail('Using this command without a parameter only works if you are in a channel.');
-        }
 
         if (args[0]) {
             wsSend('RST ' +
@@ -1295,12 +1289,11 @@ FList.Chat.Input.Commands.closeroom = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.openroom = {
+Input.Commands.openroom = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'channel') {
+        if (!args[0] && curTab.type !== 'channel')
             return fail('Using this command without a parameter only works if you are in a channel.');
-        }
 
         if (args[0]) {
             wsSend('RST ' +
@@ -1330,12 +1323,11 @@ FList.Chat.Input.Commands.openroom = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.banlist = {
+Input.Commands.banlist = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'channel') {
+        if (!args[0] && curTab.type !== 'channel')
             return fail('Using this command without a parameter only works if you are in a channel.');
-        }
 
         if (args[0]) {
             wsSend('CBL ' +
@@ -1365,12 +1357,10 @@ FList.Chat.Input.Commands.banlist = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.killchannel = {
+Input.Commands.killchannel = {
     func: function(args) {
-
-        if (!args[0] && curTab.type !== 'channel') {
+        if (!args[0] && curTab.type !== 'channel')
             return fail('Using this command without a parameter only works if you are in a channel.');
-        }
 
         if (args[0]) {
             wsSend('KIC ' +
@@ -1400,7 +1390,7 @@ FList.Chat.Input.Commands.killchannel = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.createchannel = {
+Input.Commands.createchannel = {
     func: function(args) {
         wsSend('CRC ' +
                JSON.stringify({channel: args[0]}));
@@ -1421,11 +1411,11 @@ FList.Chat.Input.Commands.createchannel = {
 /**
  * HTML5 Sound Settings command.
  */
-FList.Chat.Input.Commands.soundon = {
+Input.Commands.soundon = {
     func: function() {
-        FList.Chat.Settings.current.html5Audio=true;
+        Settings.current.html5Audio = true;
 
-        FList.Chat.Settings.save();
+        Settings.save();
 
         fprint('HTML5 audio sound effects are now [b]on[/b].');
 
@@ -1438,11 +1428,11 @@ FList.Chat.Input.Commands.soundon = {
 /**
  * HTML5 Sound Settings command.
  */
-FList.Chat.Input.Commands.soundoff = {
+Input.Commands.soundoff = {
     func: function() {
-        FList.Chat.Settings.current.html5Audio=false;
+        Settings.current.html5Audio = false;
 
-        FList.Chat.Settings.save();
+        Settings.save();
 
         fprint('HTML5 audio sound effects are now [b]off[/b].');
 
@@ -1458,12 +1448,11 @@ FList.Chat.Input.Commands.soundoff = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.leave = {
+Input.Commands.leave = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'channel') {
+        if (!args[0] && curTab.type !== 'channel')
             return fail('Using this command without a parameter only works if you are in a channel.');
-        }
 
         if (args[0]) {
             wsSend('LCH ' +
@@ -1493,13 +1482,12 @@ FList.Chat.Input.Commands.leave = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.kinks = {
+Input.Commands.kinks = {
     func: function(args) {
         var sendString = 'KIN ';
 
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             sendString += JSON.stringify({character: args[0]});
@@ -1529,12 +1517,11 @@ FList.Chat.Input.Commands.kinks = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.profile = {
+Input.Commands.profile = {
     func: function(args) {
 
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             wsSend('PRO ' +
@@ -1566,7 +1553,7 @@ FList.Chat.Input.Commands.profile = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.gban = {
+Input.Commands.gban = {
     func: function(args) {
         wsSend('ACB ' +
                JSON.stringify({character: args[0]}));
@@ -1588,9 +1575,9 @@ FList.Chat.Input.Commands.gban = {
  * ORS
  * List Private Channels command.
  */
-FList.Chat.Input.Commands.prooms = {
+Input.Commands.prooms = {
     func: function() {
-        FList.Chat.getORS=true;
+        Chat.getORS = true;
 
         wsSend('ORS');
 
@@ -1604,9 +1591,9 @@ FList.Chat.Input.Commands.prooms = {
  * CHA
  * List Channels command.
  */
-FList.Chat.Input.Commands.channels = {
+Input.Commands.channels = {
     func: function() {
-        FList.Chat.getCHA=true;
+        Chat.getCHA = true;
 
         wsSend('CHA');
 
@@ -1622,7 +1609,7 @@ FList.Chat.Input.Commands.channels = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.broadcast = {
+Input.Commands.broadcast = {
     func: function(args) {
         wsSend('BRO ' +
                JSON.stringify({message: args[0]}));
@@ -1646,12 +1633,11 @@ FList.Chat.Input.Commands.broadcast = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.setmode = {
+Input.Commands.setmode = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('RMO ' +
@@ -1684,13 +1670,12 @@ FList.Chat.Input.Commands.setmode = {
 /**
  * Get Channel Description command.
  */
-FList.Chat.Input.Commands.getdescription = {
+Input.Commands.getdescription = {
     func: function() {
-        var description = FList.Chat.channels.getData(curTab.id).description;
+        var description = Channels.getData(curTab.id).description;
 
-        if (curTab.type !== 'channel') {
+        if (curTab.type !== 'channel')
             return fail('You are not in a channel.');
-        }
 
         fprint('[noparse]' + description + '[/noparse]');
 
@@ -1706,7 +1691,7 @@ FList.Chat.Input.Commands.getdescription = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.setdescription = {
+Input.Commands.setdescription = {
     func: function(args) {
 
         wsSend('CDS ' +
@@ -1731,12 +1716,10 @@ FList.Chat.Input.Commands.setdescription = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.gkick = {
+Input.Commands.gkick = {
     func: function(args) {
-
-        if (!args[0] && curTab.type !== 'user') {
+        if (!args[0] && curTab.type !== 'user')
             return fail('Using this command without a parameter only works if you are in a private chat tab.');
-        }
 
         if (args[0]) {
             wsSend('KIK ' +
@@ -1764,9 +1747,9 @@ FList.Chat.Input.Commands.gkick = {
 /**
  * Logout command.
  */
-FList.Chat.Input.Commands.logout = {
+Input.Commands.logout = {
     func: function() {
-        FList.Connection.ws.close();
+        Con.ws.close();
         pass();
     },
     title: 'Logout',
@@ -1776,15 +1759,16 @@ FList.Chat.Input.Commands.logout = {
 /**
  * Clear Text Buffer command.
  */
-FList.Chat.Input.Commands.clear = {
+Input.Commands.clear = {
     func: function() {
         curTab.logs=[];
 
-        FList.Chat.TabBar.printLogs(curTab,
+        TabBar.printLogs(curTab,
             (curTab.type === 'channel') ?
-            FList.Chat.channels.getData(curTab.id).userMode
+            Channels.getData(curTab.id).userMode
                 :
-            'both');
+            'both'
+        );
 
         pass();
     },
@@ -1795,13 +1779,13 @@ FList.Chat.Input.Commands.clear = {
 /**
  * Online User List command.
  */
-FList.Chat.Input.Commands.users = {
+Input.Commands.users = {
     func: function() {
         var namestring='',
             i;
 
-        for (i = 0;i < FList.Chat.users.list.length;++i) {
-                namestring += '[user]' + FList.Chat.users.list[i] + '[/user], ';
+        for (i = 0;i < Users.list.length;++i) {
+                namestring += '[user]' + Users.list[i] + '[/user], ';
         }
 
         fprint('Users in the chat: ' + namestring.substring(0,namestring.length-2));
@@ -1818,12 +1802,11 @@ FList.Chat.Input.Commands.users = {
  *
  * @param {Array} args Array of requested arguments
  */
-FList.Chat.Input.Commands.invite = {
+Input.Commands.invite = {
     func: function(args) {
 
-        if (!args[1] && curTab.type !== 'channel') {
+        if (!args[1] && curTab.type !== 'channel')
             return fail('Using this command with one parameter only works if you are in a channel.');
-        }
 
         if (args[1]) {
             wsSend('CIU ' +
@@ -1856,14 +1839,13 @@ FList.Chat.Input.Commands.invite = {
 /**
  * Get Channel Code command.
  */
-FList.Chat.Input.Commands.code = {
+Input.Commands.code = {
     func: function() {
-        var channeldata=FList.Chat.channels.getData(curTab.id),
+        var channeldata = Channels.getData(curTab.id),
             bbcode = '';
 
-        if (curTab.type !== 'channel') {
+        if (curTab.type !== 'channel')
             return fail('You have to be in a channel.');
-        }
 
         if (curTab.id
             .toLowerCase()
@@ -1885,15 +1867,14 @@ FList.Chat.Input.Commands.code = {
 /**
  * Channel User List command.
  */
-FList.Chat.Input.Commands.who = {
+Input.Commands.who = {
     func: function() {
         var namestring = '',
-            users = FList.Chat.channels.getData(curTab.id).userlist,
+            users = Channels.getData(curTab.id).userlist,
             i;
 
-        if (curTab.type !== 'channel') {
+        if (curTab.type !== 'channel')
             return fail('You have to be in a channel.');
-        }
 
         for (i = 0;i < users.length;++i) {
             namestring = namestring + '[user]' + users[ i ] + '[/user], ';
@@ -1910,17 +1891,17 @@ FList.Chat.Input.Commands.who = {
 /**
  * Display All Commands command.
  */
-FList.Chat.Input.Commands.help = {
+Input.Commands.help = {
     func: function(args) {
         var listArr = [],
             i;
 
-        if (args[0] && FList.Chat.Input.Commands[args[0]]) {
+        if (args[0] && Input.Commands[args[0]]) {
             help(args[0]);
         } else {
 
-            for (i in FList.Chat.Input.Commands) {
-                  listArr.push(i);
+            for (i in Input.Commands) {
+                listArr.push(i);
             }
 
             listArr.sort();
@@ -1935,7 +1916,7 @@ FList.Chat.Input.Commands.help = {
         pass();
     },
     title: 'Help',
-    does: 'I\'m sorry, ' + FList.Chat.identity + ', I just can\'t help you anymore.',
+    does: 'I\'m sorry, ' + Chat.identity + ', I just can\'t help you anymore.',
     params: [
         {
             type: 'string',
@@ -1951,9 +1932,9 @@ FList.Chat.Input.Commands.help = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.fpriv = {
+Input.Commands.fpriv = {
     func: function(args) {
-        FList.Chat.openPrivateChat(args[0], false);
+        Chat.openPrivateChat(args[0], false);
 
         pass();
     },
@@ -1973,7 +1954,7 @@ FList.Chat.Input.Commands.fpriv = {
  *
  * @params {Array} [args] Array of requested arguments
  */
-FList.Chat.Input.Commands.track = {
+Input.Commands.track = {
     func: function(args) {
         var tarTab;
 
@@ -1981,7 +1962,7 @@ FList.Chat.Input.Commands.track = {
             return fail('Cannot toggle pinging in a non-channel window.');
 
         if (args[0]) {
-            tarTab = FList.Chat.TabBar.getTabFromId('channel', args[0]);
+            tarTab = TabBar.getTabFromId('channel', args[0]);
 
             if (!tarTab)
                 return fail('This channel doesn\'t exist in your currently open channels.');
@@ -2022,35 +2003,60 @@ FList.Chat.Input.Commands.track = {
 };
 
 /**
-* Set the default idle auto-response.
-*
-* @params {Array} [args] Array of requested arguments
-*/
-FList.Chat.Input.Commands.defaultresponse = {
-func: function(args) {
-    if (args[0].length > 255) {
-        return fail('Your auto-response\'s length cannot exceed 255 characters in length.');
-    }
-    if (args[0].length === 0) {
-        delete FList.Chat.Settings.current.defaultResponse;
-        FList.Chat.Status.response.default = undefined;
-        return fprint('Default auto-response cleared.');
-    }
-    FList.Chat.Status.response.default = args[0];
-    fprint('Your default idle auto-response was set to: \'' +
-           FList.Chat.Input.sanitize(args[0]) + '\'');
-    FList.Chat.Settings.defaultResponse = args[0];
-    pass();
-},
-title: 'DefaultResponse',
-does: 'Changes the default response to users that message you when you are idle.',
-params: [
-    {
-        type: 'string',
-        ID: 'Message',
-        hint: 'A message to display as an auto-response to a user if they message you ' +
-        'while you\'re idle. (Character limit: 255)'
-    }
-]
+ * Preview parsed message
+ *
+ * @params {Array} [args] Array of requested arguments
+ */
+Input.Commands.preview = {
+    func: function(args) {
+        var linkedFuncs = $('<div>');
+
+        function propagateFunc(id, fn) {
+            var built = $('<a>');
+
+            built
+                .attr('id', id.toLowerCase())
+                .attr('href', '#')
+                .html(id)
+                .css({
+                    color: '#215182',
+                    'font-weight': 'bold',
+                    float: 'left'
+                }).attr('onClick', fn);
+
+            return built;
+        }
+
+        this.last = args[0];
+
+        linkedFuncs.attr('id', 'fnAnchors');
+
+        linkedFuncs.append(propagateFunc('Copy', 
+                '$(\'#message-field\').val(' +
+                    'FList.Chat.Input.Commands.preview.last' +
+                ');'
+            )).append(
+                $('<div>').html(',&nbsp')
+                    .css({
+                        float: 'left'
+                    })
+            )
+            .append(propagateFunc('Clear', '$(this).parent().remove();'));
+
+        fprint(args[0] + '<br>' + linkedFuncs.html());
+
+        pass();
+    },
+    title: 'Preview',
+    does: 'Previews a message\'s output if it were sent normally (Typically' +
+        ' used to check BBCode prior to sending the message)',
+    params: [
+        {
+            type: 'string',
+            ID: 'String',
+            hint: 'A message to preview'
+        }
+    ]
 };
+
 }());
