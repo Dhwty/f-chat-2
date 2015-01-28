@@ -702,14 +702,15 @@ FList.Chat.UserBar = new function UserBar() {
     };
 };
 /**
- * 81 Q BOLD 
- * 87 W ITALIC
- * 69 E UNDERLINE
- * 82 R STRIKE
- * 65 A SUBSCRIPT
- * 83 S SUPERSCRIPT
- * 68 D URL
- * 70 F ICON
+ * CTRL +
+ * B BOLD 
+ * I ITALIC
+ * U UNDERLINE
+ * S STRIKE
+ * H SUBSCRIPT
+ * Y SUPERSCRIPT
+ * Q URL
+ * D ICON
  */
 FList.Chat.TypingArea = {
     create: function(){
@@ -740,54 +741,56 @@ FList.Chat.TypingArea = {
                 el.val(linestore.join(""));
             }
 
-            if (e.which === 81 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+            if (e.ctrlKey) {
+                if (e.which === 66) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "b");
-            } else if (e.which === 87 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    formatStyle($(this), "b");
+                } else if (e.which === 73) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "i");
-            } else if (e.which === 69 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    formatStyle($(this), "i");
+                } else if (e.which === 85) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "u");
-            } else if (e.which === 82 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    formatStyle($(this), "u");
+                } else if (e.which === 83) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "s");
-            } else if (e.which === 65 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    formatStyle($(this), "s");
+                } else if (e.which === 72) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "sub");
-            } else if (e.which === 83 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    formatStyle($(this), "sub");
+                } else if (e.which === 89) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "sup");
-            } else if (e.which === 68 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    formatStyle($(this), "sup");
+                } else if (e.which === 81) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                start = $(this)[0].selectionStart;
-                end = $(this)[0].selectionEnd;
+                    start = $(this)[0].selectionStart;
+                    end = $(this)[0].selectionEnd;
 
-                linestore = $(this).val().split("");
+                    linestore = $(this).val().split("");
 
-                linestore.splice(start, 0, "[url=");
-                linestore.splice(end + 1, 0, "][/url]");
+                    linestore.splice(start, 0, "[url=");
+                    linestore.splice(end + 1, 0, "][/url]");
 
-                $(this).val(linestore.join(""));
-            } else if (e.which === 70 && e.altKey) {
-                e.stopPropagation();
-                e.preventDefault();
+                    $(this).val(linestore.join(""));
+                } else if (e.which === 68) {
+                    e.stopPropagation();
+                    e.preventDefault();
 
-                formatStyle($(this), "icon");
+                    formatStyle($(this), "icon");
+                }
             }
         });
         $("#message-field").keypress(function(e){
