@@ -2024,9 +2024,8 @@ Input.Commands.preview = {
                 .attr('href', '#')
                 .html(id)
                 .css({
-                    color: '#215182',
-                    'font-weight': 'bold',
-                    float: 'left'
+                    color: '#FFFFFF',
+                    'font-weight': 'bold'
                 }).attr('onClick', fn);
 
             return built;
@@ -2036,21 +2035,11 @@ Input.Commands.preview = {
 
         linkedFuncs.attr('id', 'fnAnchors');
 
-        linkedFuncs.append(propagateFunc('Copy', 
-                '$(\'#message-field\').val(' +
-                    'FList.Chat.Input.Commands.preview.last' +
-                ');'
-            )).append(
-                $('<div>').html(',&nbsp')
-                    .css({
-                        float: 'left'
-                    })
-            )
-            .append(propagateFunc('Clear', '$(this).parent().remove();'));
+        linkedFuncs.append(propagateFunc(
+            'Clear', '$(this).parent().remove();'
+        ));
 
-        fprint(args[0] + '<br>' + linkedFuncs.html() + "<br>");
-
-        pass();
+        fprint(args[0] + "<br>" + linkedFuncs.html() + "<br>", "system", false);
     },
     title: 'Preview',
     does: 'Previews a message\'s output if it were sent normally (Typically' +
@@ -2064,27 +2053,4 @@ Input.Commands.preview = {
     ]
 };
 
-
-/**
- * Preview parsed message
- *
- * @params {Array} [args] Array of requested arguments
- */
-Input.Commands.watch = {
-    func: function(args) {
-
-        pass();
-    },
-    title: 'Preview',
-    does: 'Previews a message\'s output if it were sent normally (Typically' +
-        ' used to check BBCode prior to sending the message)',
-    params: [
-        {
-            type: 'string',
-            ID: 'String',
-            hint: 'A message to preview'
-        }
-    ]
-};
-
-}());
+})();
