@@ -1,20 +1,8 @@
 /**
- * Kali's Changelog: 08/01/15
+ * Kali's Changelog: 17/01/15
  * --------------------------
- * >> Function Changed: printMessage @chat.js
- * >     Fix for system messages not being highlighted and mentioned with the user's target highlight words.
- * >     Fix for spacing of messages and colon on drawing the PM logs initially when requested.
- * >> Function Changed: closeTab @chat.js
- * >     Fix for refreshing channel tabs that have sent an JCH, but not actually received a join response.
- * >> Function Changed: STA @commands.js
- * >     Fix for usernames appearing lowercase in the active tab upon being updated with a new status.
- * >     Fix for statuses being escaped indefinitely upon reiteration of auto idle.
- * >> Function Added: removeKink @chat.js
- * >     Added the ability to remove kinks from the player search.
- * >> Function Added: fpriv @input.js
- * >     Added the ability to force open a PM with a user who is offline.
- * >> Function Added: track @input.js -- Changed: printMessage @chat.js
- * >     Ability to track channels with a toggled command and receive sound-notifications of activity.
+ * >> Function Changed: printMessage @chat.js -- RLL @commands.js
+ * >     Fix for ALL THE SYSTEM MESSAGES undergoing highlight checking. Limited to rolls now.
  */
 
 WEB_SOCKET_SWF_LOCATION = "../WebSocket.swf";
@@ -713,10 +701,24 @@ FList.Chat.UserBar = new function UserBar() {
         }
     };
 };
-
+/**
+ * CTRL +
+ * B BOLD 
+ * I ITALIC
+ * U UNDERLINE
+ * S STRIKE
+ * H SUBSCRIPT
+ * Y SUPERSCRIPT
+ * Q URL
+ * D ICON
+ */
 FList.Chat.TypingArea = {
     create: function(){
         $("#message-field").keydown(function(e){
+            var linestore,
+                start,
+                end;
+
             $(".autocompletelink").each(function(i, el){ $(this).replaceWith($(this).text()); });
             if(e.which===9 && !e.ctrlKey){
                 e.preventDefault();
@@ -726,6 +728,70 @@ FList.Chat.TypingArea = {
             FList.Chat.TypingArea.indicate();
             if(e.which===38 && e.ctrlKey) { e.stopPropagation();FList.Chat.TabBar.tabToTheLeft(); }
             if(e.which===40 && e.ctrlKey) { e.stopPropagation();FList.Chat.TabBar.tabToTheRight(); }
+
+            function formatStyle(el, tag) {
+                start = el[0].selectionStart;
+                end = el[0].selectionEnd;
+
+                linestore = el.val().split("");
+
+                linestore.splice(start, 0, "[" + tag + "]");
+                linestore.splice(end + 1, 0, "[/" + tag + "]");
+
+                el.val(linestore.join(""));
+            }
+
+            if (e.ctrlKey) {
+                if (e.which === 66) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "b");
+                } else if (e.which === 73) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "i");
+                } else if (e.which === 85) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "u");
+                } else if (e.which === 83) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "s");
+                } else if (e.which === 72) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "sub");
+                } else if (e.which === 89) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "sup");
+                } else if (e.which === 81) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    start = $(this)[0].selectionStart;
+                    end = $(this)[0].selectionEnd;
+
+                    linestore = $(this).val().split("");
+
+                    linestore.splice(start, 0, "[url=");
+                    linestore.splice(end + 1, 0, "][/url]");
+
+                    $(this).val(linestore.join(""));
+                } else if (e.which === 68) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    formatStyle($(this), "icon");
+                }
+            }
         });
         $("#message-field").keypress(function(e){
             FList.Chat.TypeState.update();
