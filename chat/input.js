@@ -15,6 +15,10 @@
  * Completely redone parsing/handling of commands.
  */
 
+/**
+ * user-tracking
+ */
+
  /**
  * Lexical scope protection for aliasing. (Wraps anonymous function throughout the entire file)
  */
@@ -39,7 +43,7 @@ TabBar = Chat.TabBar,
 Users = Chat.users,
 Input = Chat.Input,
 Settings = Chat.Settings,
-Channels = Chat.Channels,
+Channels = Chat.channels,
 Sound = Chat.Sound,
 curTab = TabBar.activeTab,
 
@@ -98,9 +102,9 @@ help = function(cmd) {
 
         }
 
-    fail('[b]Syntax[/b]: /' + cmd.title.toLowerCase() + egParms);
+	    fail('[b]Syntax[/b]: /' + cmd.title.toLowerCase() + egParms);
 
-    fail('[b]Parameters[/b]: ');
+	    fail('[b]Parameters[/b]: ');
 
         for (i = 0;i < cmd.params.length;++i) {
         fail('<b style=\'margin-left:15px\'>' +
@@ -827,7 +831,7 @@ Input.Commands.ban = {
  *
  * @param {Array} args Array of requested arguments
  */
-FInput.Commands.unban = {
+Input.Commands.unban = {
     func: function(args) {
 
         if (!args[1] && curTab.type !== 'channel')
@@ -2044,7 +2048,30 @@ Input.Commands.preview = {
             )
             .append(propagateFunc('Clear', '$(this).parent().remove();'));
 
-        fprint(args[0] + '<br>' + linkedFuncs.html());
+        fprint(args[0] + '<br>' + linkedFuncs.html() + "<br>");
+
+        pass();
+    },
+    title: 'Preview',
+    does: 'Previews a message\'s output if it were sent normally (Typically' +
+        ' used to check BBCode prior to sending the message)',
+    params: [
+        {
+            type: 'string',
+            ID: 'String',
+            hint: 'A message to preview'
+        }
+    ]
+};
+
+
+/**
+ * Preview parsed message
+ *
+ * @params {Array} [args] Array of requested arguments
+ */
+Input.Commands.watch = {
+    func: function(args) {
 
         pass();
     },
