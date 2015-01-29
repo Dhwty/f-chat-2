@@ -762,7 +762,7 @@ FList.Chat.commands['RLL'] = function(params) {
     var type = typeof(params.channel) === 'undefined' ? 'user' : 'channel';
     var printtab=FList.Chat.TabBar.getTabFromId(type, target);
     if(printtab !== false){
-        FList.Chat.printMessage({msg: params.message, to: printtab, from: 'System', type: 'system'});
+        FList.Chat.printMessage({msg: params.message, to: printtab, from: 'System', type: 'roll'});
     }
 };
 FList.Chat.commands['SFC'] = function(params) {
