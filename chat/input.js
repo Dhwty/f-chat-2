@@ -15,10 +15,6 @@
  * Completely redone parsing/handling of commands.
  */
 
-/**
- * user-tracking
- */
-
  /**
  * Lexical scope protection for aliasing. (Wraps anonymous function throughout the entire file)
  */
