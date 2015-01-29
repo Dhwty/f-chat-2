@@ -25,12 +25,12 @@ echo "<script>var characterdata = ".json_encode($charlist).";</script>";
 <script src='https://www.f-list.net/js/FABridge.js' type='text/javascript'></script> 
 <script src='chat.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script src='ui.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
-<script src='input.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script src='menu.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script src='commands.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script src='connection.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script src='data.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script src='help.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
+<script src='input.js?t=<?php echo $trigger;?>' type='text/javascript'></script> 
 <script type="text/javascript">
 $(function(){
     //FList.Chat_init(true);
